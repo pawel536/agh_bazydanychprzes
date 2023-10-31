@@ -1,0 +1,21 @@
+CREATE DATABASE cw3;
+CREATE EXTENSION postgis;
+
+SELECT * FROM pg_settings WHERE name = 'port';
+--POSTGRES 16 DZIAŁA U MNIE NA PORCIE 5433, NIE DOMYŚLNYM 5432
+
+--import: dane w formacie epsg 4326, uklad DHDN Berlin to epsg 3068 - info z plików prj
+
+-- CMD.EXE - IMPORT SHAPEFILE
+shp2pgsql -s 4326 C3\T2018_KAR_GERMANY\T2018_KAR_BUILDINGS.SHP build18 | psql -h localhost -U postgres -p 5433 -d cw3
+shp2pgsql -s 4326 C3\T2019_KAR_GERMANY\T2019_KAR_BUILDINGS.SHP build19 | psql -h localhost -U postgres -p 5433 -d cw3
+shp2pgsql -s 4326 C3\T2018_KAR_GERMANY\T2018_KAR_POI_TABLE.SHP poi18 | psql -h localhost -U postgres -p 5433 -d cw3
+shp2pgsql -s 4326 C3\T2019_KAR_GERMANY\T2019_KAR_POI_TABLE.SHP poi19 | psql -h localhost -U postgres -p 5433 -d cw3	
+shp2pgsql -s 4326 C3\T2019_KAR_GERMANY\T2019_KAR_STREETS.SHP streets19 | psql -h localhost -U postgres -p 5433 -d cw3
+shp2pgsql -s 4326 C3\T2019_KAR_GERMANY\T2019_KAR_STREET_NODE.SHP nodes19 | psql -h localhost -U postgres -p 5433 -d cw3	
+shp2pgsql -s 4326 C3\T2019_KAR_GERMANY\T2019_KAR_LAND_USE_A.SHP lua19 | psql -h localhost -U postgres -p 5433 -d cw3	
+
+-- CMD.EXE - ŁĄCZENIE Z BAZĄ
+psql.exe -h localhost -p 5433 -U postgres -d cw3
+
+-- ROZWIĄZANIA ZADAŃ W PLIKU bpd_c3a.sql	
