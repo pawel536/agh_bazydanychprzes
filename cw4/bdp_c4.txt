@@ -1,0 +1,27 @@
+CREATE DATABASE cw3;
+CREATE EXTENSION postgis;
+
+SELECT * FROM pg_settings WHERE name = 'port';
+--POSTGRES 16 DZIAŁA U MNIE NA PORCIE 5433, NIE DOMYŚLNYM 5432
+
+--import: dane w układzie EPSG:2964 (Alaska Albers) - info z plików prj
+
+-- CMD.EXE - IMPORT SHAPEFILE
+shp2pgsql -s 2964 d:Zadania_AGH\7_BDP\Cw4_qgis_data\shapefiles\trees.shp trees_b | psql -h localhost -U postgres -p 5433 -d cw3
+shp2pgsql -s 2964 d:Zadania_AGH\7_BDP\Cw4_qgis_data\shapefiles\airports.shp airports | psql -h localhost -U postgres -p 5433 -d cw3
+shp2pgsql -s 2964 d:Zadania_AGH\7_BDP\Cw4_qgis_data\shapefiles\regions.shp regions | psql -h localhost -U postgres -p 5433 -d cw3
+shp2pgsql -s 2964 d:Zadania_AGH\7_BDP\Cw4_qgis_data\shapefiles\railroads.shp rail | psql -h localhost -U postgres -p 5433 -d cw3
+shp2pgsql -s 2964 d:Zadania_AGH\7_BDP\Cw4_qgis_data\shapefiles\majrivers.shp majrivers | psql -h localhost -U postgres -p 5433 -d cw3
+shp2pgsql -s 2964 d:Zadania_AGH\7_BDP\Cw4_qgis_data\shapefiles\swamp.shp swamps | psql -h localhost -U postgres -p 5433 -d cw3
+shp2pgsql -s 2964 d:Zadania_AGH\7_BDP\Cw4_qgis_data\shapefiles\popp.shp popp | psql -h localhost -U postgres -p 5433 -d cw3
+shp2pgsql -s 2964 d:Zadania_AGH\7_BDP\Cw4_qgis_data\shapefiles\rivers.shp rib | psql -h localhost -U postgres -p 5433 -d cw3
+
+-- CMD.EXE - ŁĄCZENIE Z BAZĄ
+psql.exe -h localhost -p 5433 -U postgres -d cw3
+
+-- ROZWIĄZANIA ZADAŃ W PLIKACH GRAFICZNYCH bpd_c4_xx.png
+
+-- 4 --
+--11 lotnisk militarnych / militarno - cywilnych. Jedno powyzej 1400 mnpm.
+
+-- 5 --

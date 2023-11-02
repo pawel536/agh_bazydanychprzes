@@ -20,4 +20,4 @@ shp2pgsql -s 4326 C3\T2019_KAR_GERMANY\T2019_KAR_WATER_LINES.SHP water19 | psql 
 -- CMD.EXE - ŁĄCZENIE Z BAZĄ
 psql.exe -h localhost -p 5433 -U postgres -d cw3
 
--- ROZWIĄZANIA ZADAŃ W PLIKU bpd_c3a.sql	
+-- ROZWIĄZANIA ZADAŃ W PLIKU bpd_c3a.sql
