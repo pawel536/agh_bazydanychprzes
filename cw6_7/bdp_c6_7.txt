@@ -1,0 +1,14 @@
+--CREATE DATABASE cw6;
+
+>pg_restore -d cw6 -h localhost -U postgres -p 5433 d:Zadania_AGH\7_BDP\postgis_raster.backup
+
+ALTER SCHEMA schema_name RENAME TO zurowski_407589;
+CREATE EXTENSION postgis_raster;
+
+--Wczytanie rastrów
+>raster2pgsql.exe -s 3763 -N -32767 -t 100x100 -I -C -M -d d:Zadania_AGH\7_BDP\srtm_1arc_v3.tif rasters.dem | psql -d cw6 -h localhost -U postgres
+>raster2pgsql.exe -s 3763 -N -32767 -t 128x128 -I -C -M -d d:Zadania_AGH\7_BDP\Landsat8_L1TP_RGBN.TIF rasters.landsat8 | psql -d cw6 -h localhost -U postgres -p 5433
+
+--Widok 
+SELECT * FROM public.raster_columns;
+
