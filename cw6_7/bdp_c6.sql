@@ -1,5 +1,3 @@
--- W TRAKCIE ...
-
 -- 1. Tworzenie rastrów z istniejących rastrów i interakcja z wektorami
 -- 1.1 ST_Intersects
 
@@ -63,13 +61,14 @@ USING gist (ST_ConvexHull(rast));
 SELECT AddRasterConstraints('zurowski_407589'::name, 'union'::name,'rast'::name);
 
 ------------------------------------
+------------------------------------
 -- 2. Tworzenie rastrów z wektorów (rastrowanie)
 -- 2.1 ST_AsRaster
 
 CREATE TABLE zurowski_407589.porto_parishes AS
 WITH r AS (
-SELECT rast FROM rasters.dem
-LIMIT 1
+	SELECT rast FROM rasters.dem
+	LIMIT 1
 )
 SELECT ST_AsRaster(a.geom,r.rast,'8BUI',a.id,-32767) AS rast
 FROM vectors.porto_parishes AS a, r
@@ -77,23 +76,47 @@ WHERE a.municipality ilike 'porto';
 
 ------------------------------------
 -- 2.2 ST_Union
-
-------------------------------------
--- 2.3 ST_AsRaster
-
+DROP TABLE zurowski_407589.porto_parishes; --> drop table porto_parishes first
 CREATE TABLE zurowski_407589.porto_parishes AS
 WITH r AS (
-SELECT rast FROM rasters.dem
-LIMIT 1
+	SELECT rast FROM rasters.dem
+	LIMIT 1
 )
-SELECT ST_AsRaster(a.geom,r.rast,'8BUI',a.id,-32767) AS rast
+SELECT st_union(ST_AsRaster(a.geom,r.rast,'8BUI',a.id,-32767)) AS rast
 FROM vectors.porto_parishes AS a, r
 WHERE a.municipality ilike 'porto';
 
 ------------------------------------
+-- 2.3 ST_Tile
+
+DROP TABLE zurowski_407589.porto_parishes; --> drop table porto_parishes first
+CREATE TABLE zurowski_407589.porto_parishes AS
+WITH r AS (
+	SELECT rast FROM rasters.dem
+	LIMIT 1 )
+SELECT st_tile(st_union(ST_AsRaster(a.geom,r.rast,'8BUI',a.id,-32767)),128,128,true,-32767) AS rast
+FROM vectors.porto_parishes AS a, r
+WHERE a.municipality ilike 'porto';
+
+------------------------------------
+------------------------------------
 -- 3. Konwertowanie rastrów na wektory (wektoryzowanie)
+-- 3.1 - ST_Intersection
 
+CREATE TABLE zurowski_407589.intersection_vec AS
+SELECT a.rid,(ST_Intersection(b.geom,a.rast)).geom,(ST_Intersection(b.geom,a.rast)).val
+FROM rasters.landsat8 AS a, vectors.porto_parishes AS b
+WHERE b.parish ilike 'paranhos' and ST_Intersects(b.geom,a.rast);
 
+------------------------------------
+-- 3.2 - ST_DumpAsPolygons
+
+CREATE TABLE zurowski_407589.dumppolygons AS
+SELECT a.rid,(ST_DumpAsPolygons(ST_Clip(a.rast,b.geom))).geom,(ST_DumpAsPolygons(ST_Clip(a.rast,b.geom))).val
+FROM rasters.landsat8 AS a, vectors.porto_parishes AS b
+WHERE b.parish ilike 'paranhos' and ST_Intersects(b.geom,a.rast);
+
+------------------------------------
 ------------------------------------
 -- 4. Analiza rastrów
 -- 4.1 ST_Band - do wyodrębniania pasm z rastra
@@ -150,8 +173,8 @@ FROM zurowski_407589.paranhos_dem AS a;
 -- 4.7 - ST_SummaryStats z lepszą kontrolą złożonego typu danych
 
 WITH t AS (
-SELECT st_summarystats(ST_Union(a.rast)) AS stats
-FROM zurowski_407589.paranhos_dem AS a
+	SELECT st_summarystats(ST_Union(a.rast)) AS stats
+	FROM zurowski_407589.paranhos_dem AS a
 )
 SELECT (stats).min,(stats).max,(stats).mean FROM t;
 
@@ -160,10 +183,10 @@ SELECT (stats).min,(stats).max,(stats).mean FROM t;
 -- Aby wyświetlić statystykę dla każdego poligonu "parish" można użyć polecenia GROUP BY
 
 WITH t AS (
-SELECT b.parish AS parish, st_summarystats(ST_Union(ST_Clip(a.rast, b.geom,true))) AS stats
-FROM rasters.dem AS a, vectors.porto_parishes AS b
-WHERE b.municipality ilike 'porto' and ST_Intersects(b.geom,a.rast)
-group by b.parish
+	SELECT b.parish AS parish, st_summarystats(ST_Union(ST_Clip(a.rast, b.geom,true))) AS stats
+	FROM rasters.dem AS a, vectors.porto_parishes AS b
+	WHERE b.municipality ilike 'porto' and ST_Intersects(b.geom,a.rast)
+	group by b.parish
 )
 SELECT parish,(stats).min,(stats).max,(stats).mean FROM t;
 
@@ -181,4 +204,16 @@ WHERE ST_Intersects(a.rast,b.geom)
 ORDER BY b.name;
 
 ------------------------------------
--- 4.10 - ...
+-- 4.10 - ST_TPI
+
+create table zurowski_407589.tpi30 as
+select ST_TPI(a.rast,1) as rast
+from rasters.dem a;
+
+CREATE INDEX idx_tpi30_rast_gist ON schema_name.tpi30
+USING gist (ST_ConvexHull(rast));
+
+SELECT AddRasterConstraints('zurowski_407589'::name, 'tpi30'::name,'rast'::name);
+
+
+-- QGIS SCREEN
