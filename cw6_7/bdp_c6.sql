@@ -198,8 +198,7 @@ SELECT parish,(stats).min,(stats).max,(stats).mean FROM t;
 -- należy przekonwertować geometrię wielopunktową na geometrię jednopunktową za pomocą funkcji (ST_Dump(b.geom)).geom.
 
 SELECT b.name,st_value(a.rast,(ST_Dump(b.geom)).geom)
-FROM
-rasters.dem a, vectors.places AS b
+FROM rasters.dem a, vectors.places AS b
 WHERE ST_Intersects(a.rast,b.geom)
 ORDER BY b.name;
 
@@ -210,10 +209,22 @@ create table zurowski_407589.tpi30 as
 select ST_TPI(a.rast,1) as rast
 from rasters.dem a;
 
-CREATE INDEX idx_tpi30_rast_gist ON schema_name.tpi30
+CREATE INDEX idx_tpi30_rast_gist ON zurowski_407589.tpi30
 USING gist (ST_ConvexHull(rast));
 
 SELECT AddRasterConstraints('zurowski_407589'::name, 'tpi30'::name,'rast'::name);
 
+------------------------------------
+-- 4.10a - ST_TPI
 
--- QGIS SCREEN
+create table zurowski_407589.tpi30a as
+select ST_TPI(a.rast,1) as rast
+from rasters.dem a, vectors.porto_parishes AS b
+WHERE ST_Intersects(a.rast, b.geom) AND b.municipality ilike 'porto';
+
+CREATE INDEX idx_tpi30a_rast_gist ON zurowski_407589.tpi30a
+USING gist (ST_ConvexHull(rast));
+
+SELECT AddRasterConstraints('zurowski_407589'::name, 'tpi30a'::name,'rast'::name);
+
+-- QGIS SCREENY

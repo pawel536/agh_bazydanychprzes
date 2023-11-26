@@ -30,7 +30,7 @@ RETURNS double precision AS
 $$
 BEGIN
 	--RAISE NOTICE 'Pixel Value: %', value [1][1][1];-->For debug purposes
-	RETURN (value [2][1][1] - value [1][1][1])/(value [2][1][1]+value [1][1][1]); --> NDVI calculation!
+	RETURN (value [2][1][1] - value [1][1][1])/(value [2][1][1] + value [1][1][1]); --> NDVI calculation!
 END;
 $$
 LANGUAGE 'plpgsql' IMMUTABLE COST 1000;
@@ -69,11 +69,13 @@ SELECT AddRasterConstraints('zurowski_407589'::name, 'porto_ndvi2'::name,'rast':
 
 ------------------------------------
 -- 6.1 ST_AsTiff
+
 SELECT ST_AsTiff(ST_Union(rast))
 FROM zurowski_407589.porto_ndvi;
 
 ------------------------------------
 -- 6.2 ST_AsGDALRaster
+
 SELECT ST_AsGDALRaster(ST_Union(rast), 'GTiff', ARRAY['COMPRESS=DEFLATE', 'PREDICTOR=2', 'PZLEVEL=9'])
 FROM zurowski_407589.porto_ndvi;
 
@@ -81,15 +83,24 @@ SELECT ST_GDALDrivers(); --> Lista obsługiwanych formatów
 
 ------------------------------------
 -- 6.3 Za pomocą dużego obiektu (large object, lo)
+
 CREATE TABLE tmp_out AS
 SELECT lo_from_bytea(0,
 	ST_AsGDALRaster(ST_Union(rast), 'GTiff', ARRAY['COMPRESS=DEFLATE', 'PREDICTOR=2', 'PZLEVEL=9'])
 	) AS loid
 FROM zurowski_407589.porto_ndvi;
-----------------------------------------------
+---------------------
 SELECT lo_export(loid, 'D:\myraster.tiff') --> Save the file in a place where the user postgres have access. In windows a flash drive usualy works fine.
 FROM tmp_out;
-----------------------------------------------
+---------------------
 SELECT lo_unlink(loid)
 FROM tmp_out; --> Delete the large object.
+---------------------
+DROP TABLE tmp_out;
 
+------------------------------------
+-- 6.4 Za pomocą GDAL
+
+-- gdal_translate -co COMPRESS=DEFLATE -co PREDICTOR=2 -co ZLEVEL=9 PG:"host=localhost 
+-- port=5432 dbname=postgis_raster user=postgres password=postgis schema=schema_name 
+-- table=porto_ndvi mode=2" porto_ndvi.tiff
